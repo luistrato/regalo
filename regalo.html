@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorpresa para mi hermano</title>
+    <!-- Importamos fuente Roboto (Material Design Standard) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #00695c; /* Verde azulado elegante */
+            --accent-color: #ffca28; /* Amarillo ámbar */
+            --text-color: #37474f;
+            --bg-gradient: linear-gradient(135deg, #009688 0%, #80cbc4 100%);
+        }
+
+        /* ESTILOS GENERALES */
+        body {
+            margin: 0;
+            font-family: 'Roboto', sans-serif;
+            background: var(--bg-gradient);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: var(--text-color);
+            user-select: none; /* Evita seleccionar texto al jugar */
+        }
+
+        /* CONTENEDOR TIPO TARJETA MATERIAL */
+        .card-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.19), 0 6px 6px rgba(0,0,0,0.23);
+            padding: 40px;
+            text-align: center;
+            max-width: 90%;
+            width: 400px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(.25,.8,.25,1);
+            z-index: 20;
+        }
+
+        h1 { 
+            font-weight: 900; 
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        p { 
+            font-weight: 300; 
+            font-size: 1.1rem; 
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        /* PANTALLAS */
+        .screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            top: 0;
+            left: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .hidden {
+            display: none !important;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* BOTÓN MATERIAL DESIGN */
+        .mat-btn {
+            background-color: #d32f2f;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+            transition: all 0.3s ease;
+            outline: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mat-btn:hover {
+            background-color: #b71c1c;
+            box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            transform: translateY(-2px);
+        }
+
+        .mat-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* JUEGO */
+        #game-layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .target {
+            position: absolute;
+            font-size: 3.5rem;
+            cursor: pointer;
+            user-select: none;
+            pointer-events: auto;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
+            transition: transform 0.1s;
+            animation: floatEmoji 3s infinite ease-in-out alternate;
+            /* Transición suave para el efecto de desaparecer */
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s;
+        }
+
+        /* Clase para cuando el emoji es clickeado */
+        .clicked-target {
+            transform: scale(2) !important;
+            opacity: 0 !important;
+        }
+
+        @keyframes floatEmoji {
+            from { transform: translateY(0) rotate(-5deg); }
+            to { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        #score-board {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 10px 25px;
+            border-radius: 50px;
+            font-weight: bold;
+            color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 10;
+            font-size: 1.2rem;
+        }
+
+        /* EFECTO DE EXPLOSIÓN / DESTELLO */
+        .burst {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: rgba(255, 202, 40, 0.8); /* Amarillo Material */
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: burstEffect 0.5s ease-out forwards;
+            box-shadow: 0 0 10px rgba(255, 202, 40, 0.8);
+            z-index: 50;
+        }
+
+        @keyframes burstEffect {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(15);
+                opacity: 0;
+            }
+        }
+
+        /* PANTALLA FINAL (TICKET) */
+        .ticket-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 19px 38px rgba(0,0,0,0.30), 0 15px 12px rgba(0,0,0,0.22);
+            text-align: center;
+            animation: slideUp 0.8s ease-out;
+            z-index: 30;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .ticket-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+        }
+        
+        .ticket-header h2 { margin: 0; font-size: 1.8rem; }
+        .ticket-header small { opacity: 0.8; font-weight: 300; letter-spacing: 1px; }
+
+        .ticket-body {
+            padding: 20px;
+        }
+
+        .destination {
+            font-size: 2.8rem;
+            color: #37474f;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin: 10px 0;
+            text-transform: uppercase;
+        }
+
+        .dates-badge {
+            display: inline-block;
+            background: #f4f4f4;
+            color: #d32f2f;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            border-left: 5px solid #d32f2f;
+        }
+
+        .image-container {
+            width: 100%;
+            height: 220px;
+            background-color: #eee;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            
+            /* IMAGEN CONFIGURADA AQUÍ */
+            background-image: url('donosti.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 0;
+            font-size: 0.8rem;
+        }
+
+        .footer-msg {
+            font-style: italic;
+            color: #78909c;
+        }
+
+        /* CONFETI FINAL */
+        .confetti {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background-color: #f00;
+            animation: fall linear forwards;
+            z-index: 999;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(110vh) rotate(720deg); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- PANTALLA 1: INTRO -->
+    <div id="intro-screen" class="screen">
+        <div class="card-panel">
+            <h1>¡Hola hermano!</h1>
+            <p>Tengo una sorpresa preparada, pero vas a tener que currártelo un poco.</p>
+            <p>Atrapa <strong>10</strong> elementos gastronómicos para desbloquear tu regalo.</p>
+            <button id="start-btn" class="mat-btn">JUGAR AHORA</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: JUEGO -->
+    <div id="game-screen" class="screen hidden">
+        <div id="score-board">PUNTUACIÓN: <span id="score">0</span> / 10</div>
+        <div id="game-layer"></div>
+    </div>
+
+    <!-- PANTALLA 3: REGALO -->
+    <div id="final-screen" class="screen hidden">
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <small>PRUEBA SUPERADA</small>
+                <h2>¡AY VA LA HOSTIA!</h2>
+            </div>
+            
+            <div class="ticket-body">
+                <p style="margin: 0; color: #90a4ae;">VALE POR UN VIAJE A</p>
+                <div class="destination">DONOSTIA</div>
+                
+                <div class="dates-badge">
+                    📅 6 - 8 DE MARZO
+                </div>
+
+                <!-- ÁREA DE IMAGEN -->
+                <div class="image-container">
+                    <div class="image-overlay">San Sebastián</div>
+                </div>
+
+                <p class="footer-msg">"¡Nos vamos de pintxos de verdad!"</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const introScreen = document.getElementById('intro-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const finalScreen = document.getElementById('final-screen');
+        const startBtn = document.getElementById('start-btn');
+        const scoreDisplay = document.getElementById('score');
+        const gameLayer = document.getElementById('game-layer');
+        
+        let score = 0;
+        const targetScore = 10;
+        let gameInterval;
+
+        // Emojis de comida
+        const emojis = ['🍢', '🍷', '🍤', '🧀', '🍖', '🍻', '🥓', '🍰'];
+
+        startBtn.addEventListener('click', startGame);
+
+        function startGame() {
+            introScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            spawnTarget();
+            gameInterval = setInterval(spawnTarget, 750);
+        }
+
+        function createBurst(x, y) {
+            const burst = document.createElement('div');
+            burst.classList.add('burst');
+            burst.style.left = x + 'px';
+            burst.style.top = y + 'px';
+            document.body.appendChild(burst);
+
+            // Eliminar el elemento del DOM cuando termine la animación
+            setTimeout(() => {
+                burst.remove();
+            }, 500);
+        }
+
+        function spawnTarget() {
+            if(score >= targetScore) return;
+
+            const el = document.createElement('div');
+            el.classList.add('target');
+            el.innerText = emojis[Math.floor(Math.random() * emojis.length)];
+            
+            // Posición aleatoria
+            const x = Math.random() * (window.innerWidth - 100) + 20;
+            const y = Math.random() * (window.innerHeight - 150) + 50;
+            
+            el.style.left = `${x}px`;
+            el.style.top = `${y}px`;
+
+            // Evento Click
+            el.addEventListener('click', (e) => {
+                // Evitamos dobles clicks
+                if(el.classList.contains('clicked-target')) return;
+                
+                score++;
+                scoreDisplay.innerText = score;
+                
+                // 1. Efecto visual en el emoji (POP)
+                el.classList.add('clicked-target');
+                
+                // 2. Efecto de explosión/destello (BURST)
+                // Usamos las coordenadas del evento click (e.clientX, e.clientY)
+                createBurst(e.clientX, e.clientY);
+
+                // Eliminar el emoji tras la animación
+                setTimeout(() => el.remove(), 200);
+                
+                if (score >= targetScore) {
+                    endGame();
+                }
+            });
+
+            // Auto-eliminar si no se hace click
+            setTimeout(() => {
+                // Solo si el elemento sigue ahí y no ha sido clickeado
+                if(el.parentNode && !el.classList.contains('clicked-target')) {
+                    el.style.opacity = "0";
+                    setTimeout(() => { if(el.parentNode) el.remove(); }, 300);
+                }
+            }, 2000);
+
+            gameLayer.appendChild(el);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            setTimeout(() => {
+                gameScreen.classList.add('hidden');
+                finalScreen.classList.remove('hidden');
+                launchConfetti();
+            }, 500);
+        }
+
+        function launchConfetti() {
+            const colors = ['#f44336', '#2196f3', '#ffeb3b', '#4caf50', '#ff9800'];
+            
+            for(let i=0; i<150; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = Math.random() * 3 + 2 + 's';
+                conf.style.opacity = Math.random();
+                document.body.appendChild(conf);
+            }
+        }
+    </script>
+</body>
+</html>
